@@ -1,0 +1,32 @@
+[project]
+name = "label-manager"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Kevin Herrera",email = "114835840+kevinhc2110@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "asyncpg (>=0.30.0,<1.0.0)",
+    "fastapi (>=0.136.3,<0.137.0)",
+    "pydantic-settings (>=2.14.1,<3.0.0)",
+    "uvicorn (>=0.48.0,<0.49.0)",
+]
+
+[tool.poetry]
+packages = [{include = "label_manager", from = "src"}]
+
+[tool.poetry.group.dev.dependencies]
+httpx = ">=0.28.0,<1.0.0"
+pytest = ">=8.0.0,<9.0.0"
+pytest-asyncio = ">=0.25.0,<1.0.0"
+pytest-mock = ">=3.14.0,<4.0.0"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
