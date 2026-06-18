@@ -14,11 +14,26 @@ class TestPrintLabelUseCase:
         mock_repository.get_by_id.assert_awaited_once_with(
             "550e8400-e29b-41d4-a716-446655440000"
         )
-        mock_printer_service.print.assert_awaited_once_with(
-            ip_address="192.168.1.100",
-            port=9100,
-            zpl="\n^XA\n^FO50,50^A0N,40,40^FDHola Mundo^FS\n^XZ\n",
+        mock_printer_service.print.assert_awaited_once()
+        call_kwargs = mock_printer_service.print.call_args.kwargs
+        assert call_kwargs["ip_address"] == "192.168.1.100"
+        assert call_kwargs["port"] == 9100
+        assert "^FDHola Mundo^FS" in call_kwargs["zpl"]
+
+    @pytest.mark.asyncio
+    async def test_execute_custom_text(
+        self, mock_repository, mock_printer_service
+    ):
+        use_case = PrintLabelUseCase(mock_repository, mock_printer_service)
+        await use_case.execute(
+            "550e8400-e29b-41d4-a716-446655440000",
+            text="Custom Label",
+            copies=3,
         )
+
+        call_kwargs = mock_printer_service.print.call_args.kwargs
+        assert "^FDCustom Label^FS" in call_kwargs["zpl"]
+        assert "^PQ3" in call_kwargs["zpl"]
 
     @pytest.mark.asyncio
     async def test_execute_raises_value_error_for_missing_printer(

@@ -11,3 +11,11 @@ class PrinterService(ABC):
         zpl: str,
     ) -> None:
         pass
+
+    @abstractmethod
+    async def check_health(
+        self,
+        ip_address: str,
+        port: int,
+    ) -> tuple[bool, float | None]:
+        pass

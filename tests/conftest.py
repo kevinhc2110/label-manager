@@ -18,13 +18,48 @@ def mock_printer():
 
 
 @pytest.fixture
-def mock_repository(mock_printer):
+def mock_printer_offline():
+    return Printer(
+        id="660e8400-e29b-41d4-a716-446655440001",
+        name="Offline Printer",
+        ip_address="192.168.1.200",
+        port=9100,
+        location="Remote",
+        is_active=False,
+    )
+
+
+@pytest.fixture
+def mock_repository(mock_printer, mock_printer_offline):
     repo = AsyncMock()
-    repo.get_all.return_value = [mock_printer]
+    repo.get_all.return_value = [mock_printer, mock_printer_offline]
     repo.get_by_id.return_value = mock_printer
     return repo
 
 
 @pytest.fixture
 def mock_printer_service():
-    return AsyncMock()
+    svc = AsyncMock()
+    svc.check_health = AsyncMock()
+    return svc
+
+
+@pytest.fixture
+def mock_print_job_repository():
+    repo = AsyncMock()
+    repo.create = AsyncMock()
+    repo.get_by_id = AsyncMock()
+    repo.get_pending = AsyncMock(return_value=[])
+    repo.update_status = AsyncMock()
+    repo.increment_retry = AsyncMock()
+    return repo
+
+
+@pytest.fixture
+def mock_label_template_repository():
+    repo = AsyncMock()
+    repo.get_all = AsyncMock(return_value=[])
+    repo.get_by_id = AsyncMock(return_value=None)
+    repo.get_by_name = AsyncMock(return_value=None)
+    repo.create = AsyncMock()
+    return repo

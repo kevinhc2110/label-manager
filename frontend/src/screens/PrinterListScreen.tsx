@@ -9,9 +9,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { getPrinters } from "../api/labelManager";
+import { checkPrintersHealth, getPrinters } from "../api/labelManager";
 import { loadSelectedPrinterId, saveSelectedPrinterId } from "../api/storage";
-import { Printer } from "../types/printer";
+import { Printer, PrinterHealth } from "../types/printer";
 
 const ICONS = {
   printer: "🖨️",
@@ -27,6 +27,7 @@ export default function PrinterListScreen({
   navigation: any;
 }) {
   const [printers, setPrinters] = useState<Printer[]>([]);
+  const [healthMap, setHealthMap] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const insets = useSafeAreaInsets();
@@ -41,6 +42,19 @@ export default function PrinterListScreen({
     },
     [navigation]
   );
+
+  const fetchHealth = useCallback(async () => {
+    try {
+      const healthData = await checkPrintersHealth();
+      const map: Record<string, boolean> = {};
+      for (const h of healthData) {
+        map[h.printer_id] = h.is_online;
+      }
+      setHealthMap(map);
+    } catch {
+      // health check non-critical
+    }
+  }, []);
 
   const fetchPrinters = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -70,57 +84,72 @@ export default function PrinterListScreen({
         navigateToPrinter(match);
       }
     });
-  }, [fetchPrinters, navigateToPrinter]);
+    fetchHealth();
+  }, [fetchPrinters, navigateToPrinter, fetchHealth]);
 
   const handleSelect = async (printer: Printer) => {
     await saveSelectedPrinterId(printer.id);
     navigateToPrinter(printer);
   };
 
-  const renderCard = ({ item }: { item: Printer }) => (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={() => handleSelect(item)}
-      style={{
-        backgroundColor: "#1e293b",
-        borderRadius: 16,
-        padding: 20,
-        marginHorizontal: 16,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: item.is_active ? "#22c55e33" : "#334155",
-      }}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-        <Text style={{ fontSize: 28, marginRight: 12 }}>{ICONS.printer}</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: "#f8fafc", fontSize: 18, fontWeight: "700" }}>
-            {item.name}
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
-            <Text style={{ fontSize: 10, marginRight: 4 }}>
-              {item.is_active ? ICONS.online : ICONS.offline}
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchPrinters(true), fetchHealth()]);
+    setRefreshing(false);
+  }, [fetchPrinters, fetchHealth]);
+
+  const isOnline = (p: Printer) => {
+    if (p.id in healthMap) return healthMap[p.id];
+    return p.is_active;
+  };
+
+  const renderCard = ({ item }: { item: Printer }) => {
+    const online = isOnline(item);
+    return (
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => handleSelect(item)}
+        style={{
+          backgroundColor: "#1e293b",
+          borderRadius: 16,
+          padding: 20,
+          marginHorizontal: 16,
+          marginBottom: 12,
+          borderWidth: 1,
+          borderColor: online ? "#22c55e33" : "#334155",
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+          <Text style={{ fontSize: 28, marginRight: 12 }}>{ICONS.printer}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: "#f8fafc", fontSize: 18, fontWeight: "700" }}>
+              {item.name}
             </Text>
-            <Text style={{ color: "#94a3b8", fontSize: 13 }}>
-              {item.is_active ? "Online" : "Offline"}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+              <Text style={{ fontSize: 10, marginRight: 4 }}>
+                {online ? ICONS.online : ICONS.offline}
+              </Text>
+              <Text style={{ color: "#94a3b8", fontSize: 13 }}>
+                {online ? "Online" : "Offline"}
+              </Text>
+            </View>
+          </View>
+          <Text style={{ color: "#6366f1", fontSize: 20 }}>›</Text>
+        </View>
+
+        <View style={{ flexDirection: "row", gap: 16 }}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={{ fontSize: 14, marginRight: 4 }}>{ICONS.location}</Text>
+            <Text style={{ color: "#cbd5e1", fontSize: 13 }}>{item.location}</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={{ fontSize: 14, marginRight: 4 }}>{ICONS.ip}</Text>
+            <Text style={{ color: "#cbd5e1", fontSize: 13 }}>{item.ip_address}</Text>
           </View>
         </View>
-        <Text style={{ color: "#6366f1", fontSize: 20 }}>›</Text>
-      </View>
-
-      <View style={{ flexDirection: "row", gap: 16 }}>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ fontSize: 14, marginRight: 4 }}>{ICONS.location}</Text>
-          <Text style={{ color: "#cbd5e1", fontSize: 13 }}>{item.location}</Text>
-        </View>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ fontSize: 14, marginRight: 4 }}>{ICONS.ip}</Text>
-          <Text style={{ color: "#cbd5e1", fontSize: 13 }}>{item.ip_address}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
@@ -156,7 +185,7 @@ export default function PrinterListScreen({
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => fetchPrinters(true)}
+            onRefresh={handleRefresh}
             tintColor="#6366f1"
             colors={["#6366f1"]}
           />

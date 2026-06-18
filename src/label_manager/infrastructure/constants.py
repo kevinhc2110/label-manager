@@ -1,5 +1,5 @@
-ZPL_LABEL = """
+ZPL_TEMPLATE = """
 ^XA
-^FO50,50^A0N,40,40^FDHola Mundo^FS
+^FO50,50^A0N,40,40^FD{text}^FS
 ^XZ
 """

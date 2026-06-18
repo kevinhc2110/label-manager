@@ -1,4 +1,4 @@
-import { Printer, PrintLabelResponse } from "../types/printer";
+import { Printer, PrintLabelRequest, PrintLabelResponse, PrinterHealth } from "../types/printer";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://10.0.2.2:8000";
 
@@ -18,6 +18,13 @@ export function getPrinters(): Promise<Printer[]> {
   return request("/printers");
 }
 
-export function printLabel(printerId: string): Promise<PrintLabelResponse> {
-  return request(`/printers/${printerId}/print`, { method: "POST" });
+export function printLabel(printerId: string, data?: PrintLabelRequest): Promise<PrintLabelResponse> {
+  return request(`/printers/${printerId}/print`, {
+    method: "POST",
+    body: JSON.stringify(data ?? { text: "Hola Mundo" }),
+  });
+}
+
+export function checkPrintersHealth(): Promise<PrinterHealth[]> {
+  return request("/printers/health");
 }

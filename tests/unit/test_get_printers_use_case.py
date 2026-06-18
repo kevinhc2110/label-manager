@@ -9,7 +9,7 @@ class TestGetPrintersUseCase:
         use_case = GetPrintersUseCase(mock_repository)
         result = await use_case.execute()
 
-        assert len(result) == 1
+        assert len(result) == 2
         assert result[0]["name"] == "Test Printer"
         assert result[0]["ip_address"] == "192.168.1.100"
         assert result[0]["port"] == 9100

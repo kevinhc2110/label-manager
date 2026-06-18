@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -33,12 +34,19 @@ export default function PrintLabelScreen({
   const insets = useSafeAreaInsets();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [labelText, setLabelText] = useState("");
+  const [qrData, setQrData] = useState("");
+  const [copies, setCopies] = useState("1");
 
   const handlePrint = async () => {
     setStatus("loading");
     setMessage("");
     try {
-      const res = await printLabel(printer.id);
+      const res = await printLabel(printer.id, {
+        text: labelText || "Hola Mundo",
+        ...(qrData.trim() ? { qr_data: qrData.trim() } : {}),
+        copies: parseInt(copies, 10) || 1,
+      });
       setStatus("success");
       setMessage(res.message);
     } catch (e: any) {
@@ -109,6 +117,63 @@ export default function PrintLabelScreen({
             <InfoRow icon={ICONS.location} label="Location" value={printer.location} />
             <InfoRow icon={ICONS.ip} label="IP Address" value={printer.ip_address} />
             <InfoRow icon={ICONS.port} label="Port" value={String(printer.port)} />
+          </View>
+        </View>
+
+        <View style={{ gap: 12, marginBottom: 24 }}>
+          <Text style={{ color: "#94a3b8", fontSize: 13, fontWeight: "600" }}>
+            LABEL CONTENT
+          </Text>
+          <TextInput
+            placeholder="Label text"
+            placeholderTextColor="#475569"
+            value={labelText}
+            onChangeText={setLabelText}
+            style={{
+              backgroundColor: "#1e293b",
+              borderRadius: 12,
+              padding: 14,
+              color: "#f8fafc",
+              fontSize: 16,
+              borderWidth: 1,
+              borderColor: "#334155",
+            }}
+          />
+          <TextInput
+            placeholder="QR data (optional)"
+            placeholderTextColor="#475569"
+            value={qrData}
+            onChangeText={setQrData}
+            style={{
+              backgroundColor: "#1e293b",
+              borderRadius: 12,
+              padding: 14,
+              color: "#f8fafc",
+              fontSize: 16,
+              borderWidth: 1,
+              borderColor: "#334155",
+            }}
+          />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Text style={{ color: "#94a3b8", fontSize: 14 }}>Copies:</Text>
+            <TextInput
+              placeholder="1"
+              placeholderTextColor="#475569"
+              value={copies}
+              onChangeText={setCopies}
+              keyboardType="number-pad"
+              style={{
+                backgroundColor: "#1e293b",
+                borderRadius: 12,
+                padding: 14,
+                color: "#f8fafc",
+                fontSize: 16,
+                borderWidth: 1,
+                borderColor: "#334155",
+                width: 80,
+                textAlign: "center",
+              }}
+            />
           </View>
         </View>
 
