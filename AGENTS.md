@@ -70,38 +70,42 @@ tests/
 
 ## API endpoints
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/printers` | List all printers |
-| POST | `/printers/{printer_id}/print` | Print a label directly (sync) |
-| GET | `/printers/health` | Real-time TCP connectivity for every printer |
-| POST | `/printers/batch/print` | Queue multiple labels for printing (async) |
-| GET | `/printers/jobs` | List pending print jobs |
-| GET | `/printers/jobs/{job_id}` | Get job status |
-| GET | `/printers/templates` | List label templates |
-| POST | `/printers/templates` | Create a label template |
-| POST | `/webhook/print` | ERP/webhook endpoint — queues a print job |
-| GET | `/health` | Service health |
+| Method | Path                           | Description                                  |
+| ------ | ------------------------------ | -------------------------------------------- |
+| GET    | `/printers`                    | List all printers                            |
+| POST   | `/printers/{printer_id}/print` | Print a label directly (sync)                |
+| GET    | `/printers/health`             | Real-time TCP connectivity for every printer |
+| POST   | `/printers/batch/print`        | Queue multiple labels for printing (async)   |
+| GET    | `/printers/jobs`               | List pending print jobs                      |
+| GET    | `/printers/jobs/{job_id}`      | Get job status                               |
+| GET    | `/printers/templates`          | List label templates                         |
+| POST   | `/printers/templates`          | Create a label template                      |
+| POST   | `/webhook/print`               | ERP/webhook endpoint — queues a print job    |
+| GET    | `/health`                      | Service health                               |
 
 ### Print a label (sync)
+
 ```json
 POST /printers/{id}/print
 {"text": "Caja 1", "qr_data": "ORD-123", "copies": 2}
 ```
 
 ### Webhook (async, queued)
+
 ```json
 POST /webhook/print
 {"printer_id": "...", "text": "Pedido #123", "variables": {"order": "123"}}
 ```
 
 ### Batch print (async, queued)
+
 ```json
 POST /printers/batch/print
 {"jobs": [{"printer_id": "...", "text": "Box 1"}, {"printer_id": "...", "text": "Box 2"}]}
 ```
 
 ### Templates
+
 ```json
 POST /printers/templates
 {"name": "shipping", "content_template": "Order {{order_id}} - {{customer}}"}
@@ -116,10 +120,10 @@ POST /printers/templates
 
 ## DB tables
 
-| Table | Purpose |
-|---|---|
-| `Printer` | Registered printers |
-| `print_job` | Queued/processed print jobs |
+| Table            | Purpose                                              |
+| ---------------- | ---------------------------------------------------- |
+| `Printer`        | Registered printers                                  |
+| `print_job`      | Queued/processed print jobs                          |
 | `label_template` | Reusable label templates with `{{var}}` placeholders |
 
 ## Quirks & gotchas
