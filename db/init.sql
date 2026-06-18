@@ -55,8 +55,8 @@ VALUES
     ('c3d4e5f6-a7b8-9012-cdef-123456789012', 'Kyocera Pruebas', '192.168.69.50', 9100, 'Laboratorio - IoT', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO label_template (id, name, content_template)
+INSERT INTO label_template (name, content_template)
 VALUES
-    ('t1-template-default', 'default', 'Etiqueta estándar'),
-    ('t2-template-shipping', 'shipping', 'Pedido {{order_id}} - {{customer}}')
+    ('default', 'Etiqueta estándar'),
+    ('shipping', 'Pedido {{order_id}} - {{customer}}')
 ON CONFLICT (name) DO NOTHING;
